@@ -1,0 +1,1 @@
+java -jar C:\temp\SeleniumSetup\selenium-server-standalone.jar -role hub -newSessionWaitTimeout 25000

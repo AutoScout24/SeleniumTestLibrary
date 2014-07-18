@@ -1,0 +1,2 @@
+set CHROME_DRIVER_LOC=C:\temp\SeleniumSetup\Chrome\chromedriver.exe
+java -jar C:\temp\SeleniumSetup\selenium-server-standalone.jar -role webdriver -Dwebdriver.chrome.driver=%CHROME_DRIVER_LOC% -hub http://localhost:4444/grid/register -port 5559

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>@project@</id>
+    <version>@build.number@</version>
+    <authors>@authors@</authors>
+    <owners>@authors@</owners>
+    <summary>@summary@</summary>
+    <licenseUrl>https://github.com/AutoScout24/SeleniumTestLibrary</licenseUrl>
+    <projectUrl>https://github.com/AutoScout24/SeleniumTestLibrary</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>@description@</description>
+    <releaseNotes>@releaseNotes@</releaseNotes>
+    <copyright>Copyright AutoScout24 2014</copyright>
+    <tags>AutoScout24 SeleniumTestLibrary</tags>
+  </metadata>
+  <files>
+    <file src="bin\Release\Drivers\*.*" target="content\drivers" />
+    <file src="bin\Release\*.*" target="lib\net45" />    
+  </files>
+</package>

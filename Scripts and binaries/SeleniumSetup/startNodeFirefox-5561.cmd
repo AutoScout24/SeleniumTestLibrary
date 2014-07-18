@@ -1,0 +1,1 @@
+java -jar C:\temp\SeleniumSetup\selenium-server-standalone.jar -role webdriver -hub http://localhost:4444/grid/register -port 5561
