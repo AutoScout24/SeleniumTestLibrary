@@ -1,19 +1,22 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>AS24.SchedulerForSeleniumTestLibrary</id>
-    <version>1.0.0.0</version>
-    <title>AS24.SchedulerForSeleniumTestLibrary</title>
-    <authors>Constantin Dohotaru</authors>
-    <owners>Constantin Dohotaru</owners>
-    <iconUrl>http://docs.seleniumhq.org/images/big-logo.png</iconUrl>
+    <id>@project@</id>
+    <version>@build.number@</version>
+    <authors>@authors@</authors>
+    <owners>@authors@</owners>
+    <summary>@summary@</summary>
+    <licenseUrl>https://github.com/AutoScout24/SeleniumTestLibrary</licenseUrl>
+    <projectUrl>https://github.com/AutoScout24/SeleniumTestLibrary</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>AS24 Scheduler for Selenium test library.</description>
-    <summary>AS24 Scheduler for Selenium test library.</summary>    
+    <description>@description@</description>
+    <releaseNotes>@releaseNotes@</releaseNotes>
+    <copyright>Copyright AutoScout24 2014</copyright>
+    <tags>AutoScout24 SeleniumTestLibrary Scheduler</tags>
   </metadata>
   <files>
     <file src="bin\Release\Hosts\" target="content\hosts" />
     <file src="bin\Release\NUnit\" target="content\NUnit" />
-    <file src="bin\Release\*.*" target="lib\net45" />        
+    <file src="bin\Release\*.*" target="lib\net45" />
   </files>
 </package>
