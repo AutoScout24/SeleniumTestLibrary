@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using AutoScout24.SeleniumTestLibrary.Common;
-using AutoScout24.SeleniumTestLibrary.Providers;
+using AutoScout24.SeleniumTestLibrary.Criteria;
+using AutoScout24.SeleniumTestLibrary.Setup;
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -28,7 +31,7 @@ namespace AutoScout24.SeleniumTestLibrary.Core
 
         public Browser(string browserType)
         {
-            var testConfig = TestConfigReader.GetTestConfig(browserType);            
+            var testConfig = TestConfigReader.GetTestConfig(browserType);
             var desiredCapabilities = new DesiredCapabilities();
             var internetExplorerOptions = new InternetExplorerOptions
             {
@@ -64,9 +67,8 @@ namespace AutoScout24.SeleniumTestLibrary.Core
                     desiredCapabilities.SetCapability("ignoreProtectedModeSettings", true);
                     browser = new ExtendedRemoteWebDriver(new Uri(string.Format(TestRequestFormat, testConfig.MachineName, testConfig.Port)), desiredCapabilities);
                     type = BrowserType.RemoteIe;
-                    break;                
+                    break;
             }
-
             browser.Manage().Window.Maximize();
         }
 
@@ -74,6 +76,21 @@ namespace AutoScout24.SeleniumTestLibrary.Core
         {
             get { return browser.Url; }
         }
+
+        public IElement Find(ICriteria criterion, bool onlyVisible = true)
+        {
+            return FindOneWithCriterion(criterion, onlyVisible);
+        }
+
+        public IEnumerable<IElement> FindAll(ICriteria criterion, bool onlyVisible = true)
+        {
+            return FindAllWithCriterion(criterion, onlyVisible);
+        }
+
+        public IElement WaitFor(ICriteria criterion, bool onlyVisible = true, int timeout = 30)
+        {
+            return WaitOneWithCriterion(criterion, onlyVisible);
+        }        
 
         public void NavigateTo(string url, bool killPromptWindows = true)
         {
@@ -206,6 +223,44 @@ namespace AutoScout24.SeleniumTestLibrary.Core
             browser.Manage().Cookies.AddCookie(new OpenQA.Selenium.Cookie(name, value));
         }
 
+        public void EnableFeature(string featureBeeName)
+        {
+            //e.g: cookie name: featureBee cookie value: #GuidedTourButton=true#
+            //cookie value when more toggles are enabled #GuidedTourButton=false#PMVM-2745-MarketAnalysisSurvey=true#
+            var cookieNamed = browser.Manage().Cookies.GetCookieNamed("featureBee");
+            var cookieValue = CreateCookieValue(true, featureBeeName, cookieNamed);
+            browser.Manage().Cookies.DeleteCookieNamed("featureBee");
+            browser.Manage().Cookies.AddCookie(new OpenQA.Selenium.Cookie("featureBee", cookieValue));
+        }
+
+        public void DisableFeature(string featureBeeName)
+        {
+            var cookieNamed = browser.Manage().Cookies.GetCookieNamed("featureBee");
+            var cookieValue = CreateCookieValue(false, featureBeeName, cookieNamed);
+            browser.Manage().Cookies.DeleteCookieNamed("featureBee");
+            browser.Manage().Cookies.AddCookie(new OpenQA.Selenium.Cookie("featureBee", cookieValue));
+        }
+
+        public bool IsFeatureEnabled(string featureBeeName)
+        {
+            var featureDisabled = string.Format("#{0}=false", featureBeeName);
+            var featureEnabled = string.Format("#{0}=true", featureBeeName);
+
+            var cookieNamed = browser.Manage().Cookies.GetCookieNamed("featureBee");
+            if (cookieNamed != null)
+            {
+                if (cookieNamed.Value.Contains(featureDisabled))
+                {
+                    return false;
+                }
+                if (cookieNamed.Value.Contains(featureEnabled))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public void WaitForPageLoad(int waitForSeconds = 30)
         {
             browser.WaitForPageLoad(waitForSeconds);
@@ -214,6 +269,11 @@ namespace AutoScout24.SeleniumTestLibrary.Core
         public void WaitUrlContains(string value, int waitForSeconds = 30)
         {
             browser.WaitUrlContains(value, waitForSeconds);
+        }
+
+        public void RegisterWaitForEvent(string eventName)
+        {
+            browser.RegisterForEvent(eventName);
         }
 
         public void WaitForEvent(string eventName, int timeoutInSeconds = 30)
@@ -241,9 +301,9 @@ namespace AutoScout24.SeleniumTestLibrary.Core
             browser.KillDialogs();
         }
 
-        public void ExecuteScript(string javascript)
+        public string ExecuteScript(string javascript)
         {
-            browser.ExecuteScript(javascript);
+            return browser.ExecuteScript(javascript);
         }
 
         public void ScrollIntoViewCss(string elementCss)
@@ -253,7 +313,7 @@ namespace AutoScout24.SeleniumTestLibrary.Core
 
         public void ScrollIntoViewId(string elementId)
         {
-            browser.ScrollIntoViewCss(elementId);
+            browser.ScrollIntoViewId(elementId);
         }
 
         public void SwitchTo(string windowId = null)
@@ -323,7 +383,7 @@ namespace AutoScout24.SeleniumTestLibrary.Core
                         break;
                     case BrowserType.InternetExplorer32:
                         screenshot = ((InternetExplorerDriver) browser).GetScreenshot();
-                        break;                    
+                        break;
                     case BrowserType.RemoteIe:
                     case BrowserType.RemoteFirefox:
                     case BrowserType.RemoteChrome:
@@ -380,6 +440,104 @@ namespace AutoScout24.SeleniumTestLibrary.Core
             return browser.PageSource;
         }
 
+        public string GetUrl()
+        {
+            return browser.Url;
+        }
+
+        public void SetDisplaySize(Device device)
+        {
+            switch (device)
+            {
+                case Device.IpadVertical:
+                    browser.Manage().Window.Size = new Size(768, 1024);
+                    break;
+                case Device.Ipadhorizontal:
+                    browser.Manage().Window.Size = new Size(1024, 768);
+                    break;
+                case Device.Iphone4S:
+                    browser.Manage().Window.Size = new Size(320, 480);
+                    break;
+                case Device.Iphone5S:
+                    browser.Manage().Window.Size = new Size(320, 568);
+                    break;
+                case Device.Samsung:
+                    browser.Manage().Window.Size = new Size(360, 640);
+                    break;
+                default:
+                    browser.Manage().Window.Maximize();
+                    break;
+            }
+        }
+
+        private IElement WaitOneWithCriterion(ICriteria criterion, bool onlyVisible, int timeout = 30)
+        {
+            var criteriaType = criterion.CriteriaType;
+            string criterionString = criterion.GetCriterion();
+            switch (criteriaType)
+            {
+                case CriteriaType.Id:
+                    return WaitForOneWithCriterion(criterionString, By.Id(criterionString), onlyVisible, timeout);
+                case CriteriaType.CssClass:
+                    return WaitForOneWithCriterion(criterionString, By.ClassName(criterionString), onlyVisible, timeout);
+                case CriteriaType.DataAttribute:
+                case CriteriaType.Selector:
+                    return WaitForOneWithCriterion(criterionString, By.CssSelector(criterionString), onlyVisible, timeout);
+            }
+            throw new ArgumentException(string.Format("Don't know this criterion: {0}", criterionString));
+        }
+
+        private static string CreateCookieValue(bool shouldEnable, string featureName, OpenQA.Selenium.Cookie cookie)
+        {
+            var featureDisabled = string.Format("#{0}=false", featureName);
+            var featureEnabled = string.Format("#{0}=true", featureName);
+
+            if (cookie != null)
+            {
+                var value = cookie.Value;
+                if (string.IsNullOrEmpty(value))
+                {
+                    if (shouldEnable)
+                    {
+                        return featureEnabled;
+                    }
+                    return featureDisabled;
+                }
+
+                if (shouldEnable)
+                {
+                    if (value.Contains(featureEnabled))
+                    {
+                        return value;
+                    }
+                    if (value.Contains(featureDisabled))
+                    {
+                        return value.Replace(featureDisabled, featureEnabled);
+                    }
+                    value += featureEnabled;
+                    return value;
+                }
+                // should disable
+                if (value.Contains(featureDisabled))
+                {
+                    return value;
+                }
+                if (value.Contains(featureEnabled))
+                {
+                    value = value.Replace(featureEnabled, featureDisabled);
+                    return value;
+                }
+                value += featureEnabled;
+                return value;
+            }
+
+            if (shouldEnable)
+            {
+                return featureEnabled;
+            }
+            return featureDisabled;
+        }
+
         public Cookie GetCookie(string name)
         {
             var cookie = browser.Manage().Cookies.GetCookieNamed(name);
@@ -408,7 +566,7 @@ namespace AutoScout24.SeleniumTestLibrary.Core
                 case BrowserType.Chrome:
                     return Path.Combine(basePath, @"Drivers\");
                 case BrowserType.InternetExplorer32:
-                    return Path.Combine(basePath, @"Drivers\");                
+                    return Path.Combine(basePath, @"Drivers\");
             }
             throw new ArgumentOutOfRangeException(string.Format("I don't know this Browser type: {0}", browserType));
         }
@@ -427,6 +585,106 @@ namespace AutoScout24.SeleniumTestLibrary.Core
         {
             return new WebElement(browser.FindElement(By.XPath(xpath)));
         }
+
+        private IElement FindOneWithCriterion(ICriteria criterion, bool onlyVisible = true)
+        {
+            var criteriaType = criterion.CriteriaType;
+            var criterionString = criterion.GetCriterion();
+            switch (criteriaType)
+            {
+                case CriteriaType.Id:
+                    return FindOneWithCriterion(onlyVisible, By.Id(criterionString));
+                case CriteriaType.CssClass:
+                    return FindOneWithCriterion(onlyVisible, By.ClassName(criterionString));
+                case CriteriaType.DataAttribute:
+                case CriteriaType.Selector:
+                    return FindOneWithCriterion(onlyVisible, By.CssSelector(criterionString));
+            }
+            return null;
+        }
+
+        private IEnumerable<IElement> FindAllWithCriterion(ICriteria criterion, bool onlyVisible = true)
+        {
+            var criteriaType = criterion.CriteriaType;
+            switch (criteriaType)
+            {
+                case CriteriaType.Id:
+                    return FindAllWithCriterion(onlyVisible, By.Id(criterion.GetCriterion()));
+                case CriteriaType.CssClass:
+                    return FindAllWithCriterion(onlyVisible, By.ClassName(criterion.GetCriterion()));
+                case CriteriaType.DataAttribute:
+                case CriteriaType.Selector:
+                    return FindAllWithCriterion(onlyVisible,
+                        By.CssSelector(criterion.GetCriterion()));
+            }
+            return null;
+        }
+
+        private IElement FindOneWithCriterion(bool onlyVisible, By by)
+        {
+            var elements = browser.FindElements(by);
+            if (onlyVisible)
+            {
+                foreach (var webElement in elements)
+                {
+                    if (webElement.Displayed)
+                    {
+                        return new WebElement(webElement);
+                    }
+                    
+                }                
+            }
+            else
+            {
+                return new WebElement(elements.FirstOrDefault());    
+            }
+            return null;
+        }
+
+        private IEnumerable<IElement> FindAllWithCriterion(bool onlyVisible, By by)
+        {
+            var visibleElements = new List<WebElement>();
+            var allElements = new List<WebElement>();
+            var elements = browser.FindElements(by);
+            foreach (var webElement in elements)
+            {
+                if (webElement.Displayed)
+                {
+                    visibleElements.Add(new WebElement(webElement));
+                }
+                allElements.Add(new WebElement(webElement));
+            }
+            return onlyVisible ? visibleElements : allElements;
+        }
+
+        private IElement WaitForOneWithCriterion(string criterion, By by, bool onlyVisible, int timeout = 30)
+        {
+            if (onlyVisible)
+            {
+                int counter = 0;
+                do
+                {
+                    counter++;
+                    var element = FindOneWithCriterion(true, by);                    
+                    if (element == null)
+                    {
+                        Console.WriteLine("Element is null");
+                        Thread.Sleep(100);
+                    }
+                    else
+                    {
+                        Console.WriteLine(element.IsVisible);
+                        return element;
+                    }
+                    if (counter == 300)
+                    {
+                        throw new Exception(string.Format("No element matching criterion {0} could be found in {1}", criterion, timeout));
+                    }
+                } 
+                while (true);
+            }
+            return FindOneWithCriterion(false, by);
+        }    
 
         private static async Task<HttpStatusCode> GetCode(string url)
         {

@@ -51,7 +51,7 @@ namespace Autoscout24.Scheduler
             globalSettings.ReRunFailedTests = settings.ReRunFailedTests;
             globalSettings.ReRunFailedTestsLimit = settings.ReRunFailedTestsLimit;
             globalSettings.SeleniumNodes = settings.SeleniumClients;
-            globalSettings.TestEnvironment = TestEnvironment.Ref;
+            globalSettings.TestEnvironment = environment;
             globalSettings.NUnitArgs = settings.NUnitArgs;
 
             testRunSettings.AppendBuildNumberToPath = settings.AppendBuildNumberToPath;

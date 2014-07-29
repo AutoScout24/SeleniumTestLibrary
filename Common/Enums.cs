@@ -15,5 +15,23 @@
         Chrome,
         Firefox,
         Ie
-    }   
+    }
+
+    public enum Device
+    {
+        IpadVertical,
+        Ipadhorizontal,
+        Iphone4S,
+        Iphone5S,
+        Samsung,
+        Pc
+    }
+
+    public enum CriteriaType
+    {
+        Id,
+        CssClass,
+        DataAttribute,
+        Selector
+    }
 }      

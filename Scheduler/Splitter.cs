@@ -36,10 +36,15 @@ namespace Autoscout24.Scheduler
             }
             var testNames = allSmallTestClasses.ToString();
             if (testNames.StartsWith(","))
+            {
                 testNames = testNames.Remove(0, 1);
+            }
 
             var testsList = newShortenedList.Select(typeAndSize => typeAndSize.TypeName).ToList();
-            testsList.Add(testNames);
+            if (!string.IsNullOrWhiteSpace(testNames))
+            {
+                testsList.Add(testNames);
+            }
             return testsList;
         }
 

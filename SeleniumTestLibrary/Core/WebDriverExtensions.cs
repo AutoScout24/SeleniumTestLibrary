@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.Text;
 using System.Threading;
 
 using OpenQA.Selenium;
@@ -12,10 +11,10 @@ namespace AutoScout24.SeleniumTestLibrary.Core
 {
     public static class WebDriverExtensions
     {
-        public static readonly string WaitUntilPageIsLoaded = "return document['readyState'] ? 'complete' == document.readyState : true";
+        private const string UniqueVariableName = "CFEEEC82924B40B4A22A0F916E0D1238";
+        private const string WaitUntilPageIsLoaded = "return document['readyState'] ? 'complete' == document.readyState : true";
 
-        public static readonly string WaitUntilPageIsLoadedInIe =
-            "var seleniumReady = false; if (typeof window['jQuery'] != 'undefined') { window.jQuery(function () { seleniumReady = true; }); } else { seleniumReady = true; } return seleniumReady;";
+        private const string WaitUntilPageIsLoadedInIe = "var seleniumReady = false; if (typeof window['jQuery'] != 'undefined') { window.jQuery(function () { seleniumReady = true; }); } else { seleniumReady = true; } return seleniumReady;";
 
         public static IWebElement FindElement(this IWebDriver driver, By by, int timeoutInSeconds)
         {            
@@ -133,25 +132,65 @@ namespace AutoScout24.SeleniumTestLibrary.Core
                     Debug.WriteLine(executeScript);
                     return executeScript;
                 });
+        }      
+
+        public static void RegisterForEvent(this IWebDriver driver, string eventName)
+        {
+            try
+            {                
+                var javaScriptCode = string.Format("$(document).one('{0}', function () {{ window.{1}++; }}); window.{1} = 0;", eventName, UniqueVariableName);
+                driver.ExecuteScript(javaScriptCode);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
         public static void WaitForEvent(this IWebDriver driver, string eventName, int timeoutInSeconds)
         {
             try
             {
-                driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(timeoutInSeconds));
-                var callbackName = string.Format("call_{0}", Guid.NewGuid().ToString().Replace("-", ""));
-
-                var javaScriptCode = new StringBuilder(string.Format("var {0} = arguments[arguments.length - 1]; $(document).one('", callbackName));
-                javaScriptCode.Append(eventName);
-                javaScriptCode.AppendFormat("', function () {{ {0}(true); }});", callbackName);
-
-                var javaScriptExecutor = driver as IJavaScriptExecutor;
-                javaScriptExecutor.ExecuteScript(javaScriptCode.ToString());
+                driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(timeoutInSeconds));                       
+                var tries = 0;
+                do
+                {
+                    var eventWasFird = QueryEventCallsCounterValue(driver);
+                    if (eventWasFird)
+                    {
+                        return;        
+                    }
+                    else
+                    {
+                        Thread.Sleep(50);
+                        tries++;
+                        if (tries >= 600)
+                        {
+                            throw new TimeoutException(string.Format("Event {0} was not fired while waiting for 30 seconds", eventName));
+                        }
+                    }
+                } 
+                while (true);
             }
             finally
             {
                 driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(30));
+            }
+        }
+
+        private static bool QueryEventCallsCounterValue(IWebDriver driver)
+        {
+            try
+            {
+                var javaScriptCode = string.Format("return window.{0};", UniqueVariableName);
+                var result = driver.ExecuteScript(javaScriptCode);                                
+                var counter = Convert.ToInt32(result);
+                return counter == 1;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return false;
             }
         }
 
@@ -178,8 +217,15 @@ namespace AutoScout24.SeleniumTestLibrary.Core
             {
                 const double TimeoutInSeconds = 30;
                 driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(TimeoutInSeconds));
-                var javaScriptExecutor = driver as IJavaScriptExecutor;
-                return javaScriptExecutor.ExecuteScript(script) as string;
+                var result = ((IJavaScriptExecutor) driver).ExecuteScript(script);
+                if (result != null)
+                {
+                    return Convert.ToString(result);                    
+                }
+                else
+                {
+                    return null;
+                }
             }
             finally
             {

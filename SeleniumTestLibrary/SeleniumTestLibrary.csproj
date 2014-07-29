@@ -44,9 +44,8 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -82,13 +81,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnElement.cs" />
     <Compile Include="Core\Cookie.cs" />
-    <Compile Include="Providers\TestConfig.cs" />
+    <Compile Include="Criteria\ClassNameCriterion.cs" />
+    <Compile Include="Criteria\CssSelectorCriterion.cs" />
+    <Compile Include="Criteria\DataAttributeValueCriterion.cs" />
+    <Compile Include="Criteria\ICriteria.cs" />
+    <Compile Include="Criteria\IdCriterion.cs" />
+    <Compile Include="Elements.cs" />
+    <Compile Include="Setup\TestConfig.cs" />
     <Compile Include="Core\ExtendedRemoteWebDriver.cs" />
     <Compile Include="Core\Browser.cs" />
     <Compile Include="Core\IBrowse.cs" />
     <Compile Include="Core\IElement.cs" />
-    <Compile Include="Providers\TestConfigReader.cs" />
+    <Compile Include="Setup\TestConfigReader.cs" />
     <Compile Include="SeleniumTestLibrary.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -102,6 +108,7 @@
     <None Include="SeleniumTestLibrary.nuspec">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>SeleniumTestLibrary.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

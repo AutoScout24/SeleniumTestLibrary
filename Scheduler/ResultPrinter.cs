@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 using Autoscout24.Scheduler.Models;
+
+using log4net;
 
 namespace Autoscout24.Scheduler
 {
     public class ResultPrinter
     {
+        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly string deliverySystemCmd;
         private readonly ResultModel globalTotals;
         private readonly ResultModel totalsRoundOne;
@@ -101,11 +105,13 @@ namespace Autoscout24.Scheduler
 
         public void PrintListOfNamespaces(IEnumerable<string> testsList)
         {
-            Console.WriteLine("Will test following fixtures/namespaces:");            
+            Console.WriteLine("Will test following fixtures/namespaces:");
+            Log.Info("Will test following fixtures/namespaces:");
             Console.WriteLine();
             foreach (var test in testsList)
             {
-                Console.WriteLine(test);                
+                Console.WriteLine(test);  
+                Log.Info(test);
             }
             Console.WriteLine();
         }
@@ -113,7 +119,9 @@ namespace Autoscout24.Scheduler
         public void PrintMachinesAndParallelProcessesCount(int machinesCount, int parallelProcessesCount)
         {
             Console.WriteLine("Will run the tests on {0} machines.", machinesCount);
-            Console.WriteLine("Will run {0} tests in parallel.", parallelProcessesCount);            
+            Log.Info(string.Format("Will run the tests on {0} machines.", machinesCount));
+            Console.WriteLine("Will run {0} tests in parallel.", parallelProcessesCount);
+            Log.Info(string.Format("Will run {0} tests in parallel.", parallelProcessesCount));
             Console.WriteLine();
         }
 
